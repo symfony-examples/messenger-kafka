@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  php:
+    container_name: sf-messenger-kafka-php
+    depends_on:
+      - kafka
+    build:
+      context: .
+      target: local
+    volumes:
+      - '.:/var/www/symfony'
+
+  kafka:
+    container_name: sf-messenger-kafka-client
+    image: docker.io/bitnami/kafka:3.4
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+volumes:
+  kafka_data:
+    driver: local
