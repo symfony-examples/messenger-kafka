@@ -2,12 +2,13 @@
 
 namespace App\Command;
 
-use App\Kafka\Message\OrderPaidMessage;
+use App\Messenger\Message\OrderPaidMessage;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[AsCommand(
@@ -18,7 +19,7 @@ class KafkaProducerCommand extends Command
 {
     public const TOPIC_ARGS = 'topic';
 
-    public function __construct(private SerializerInterface $serializer, string $name = null)
+    public function __construct(private SerializerInterface $serializer, private MessageBusInterface $bus, string $name = null)
     {
         parent::__construct($name);
     }
@@ -38,6 +39,18 @@ class KafkaProducerCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->bus->dispatch(
+            new OrderPaidMessage(reference: 'RTY', amount: 3000)
+        );
+        $output->writeln(
+            sprintf(
+                '<info>Message send it to Kafka topic "%s" with messenger dispatcher</info>', $input->getArgument(self::TOPIC_ARGS)
+            )
+        );
+
+        return Command::SUCCESS;
+
+
         $conf = new \RdKafka\Conf();
         $conf->set('metadata.broker.list', 'kafka:9092');
 
@@ -45,7 +58,7 @@ class KafkaProducerCommand extends Command
 
         $topic = $producer->newTopic($input->getArgument(self::TOPIC_ARGS));
 
-        $message = new OrderPaidMessage(reference: 'ABC', amount: 1000);
+        $message = new OrderPaidMessage(reference: 'QWE', amount: 2100);
         $topic->producev(
             partition: RD_KAFKA_PARTITION_UA,
             msgflags: 0,

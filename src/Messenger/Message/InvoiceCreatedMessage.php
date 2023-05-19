@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Kafka\Message;
+namespace App\Messenger\Message;
 
 class InvoiceCreatedMessage
 {

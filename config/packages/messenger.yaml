@@ -8,10 +8,22 @@ framework:
             # async: '%env(MESSENGER_TRANSPORT_DSN)%'
             # failed: 'doctrine://default?queue_name=failed'
             # sync: 'sync://'
+            kafka_test:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    topic: 'topic' # ProducerTopic
+                    # todo: create topics if not exists
+                    # todo: manage single topic
+                    topics: # ConsumerTopics
+                        - 'topic'
+                        - 'test'
 
         routing:
             # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            'App\Messenger\Message\OrderPaidMessage': kafka_test
+
+        serializer:
+            default_serializer: messenger.transport.symfony_serializer
 
 # when@test:
 #    framework:
