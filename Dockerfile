@@ -17,13 +17,12 @@ COPY .docker/php/symfony.ini $PHP_INI_DIR/conf.d/
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
-## INSTALL KAFKA EXTESIONS
+## SETUP RDKAFKA EXTESIONS @see https://arnaud.le-blanc.net/php-rdkafka-doc/phpdoc/rdkafka.setup.html
 RUN set -xe \
     && apk add --no-cache --update --virtual .phpize-deps $PHPIZE_DEPS \
-    librdkafka librdkafka-dev kafkacat \
+    librdkafka-dev \
     && pecl install rdkafka
-
-#COPY ./.docker/php/kafka.ini $PHP_INI_DIR/conf.d/
+COPY ./.docker/php/kafka.ini $PHP_INI_DIR/conf.d/
 
 CMD ["php-fpm", "-F"]
 
@@ -50,7 +49,6 @@ RUN wget -c https://phar.phpunit.de/phpcpd.phar -O /usr/local/bin/phpcpd \
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
 RUN install-php-extensions xdebug-3.2.1;
 COPY .docker/php/xdebug.ini $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
-#COPY .docker/php/error_reporting.ini $PHP_INI_DIR/conf.d/error_reporting.ini
 ## END XDEBUG
 
 FROM builder as ci

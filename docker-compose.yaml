@@ -11,16 +11,26 @@ services:
     volumes:
       - '.:/var/www/symfony'
 
-  kafka:
-    container_name: sf-messenger-kafka-client
-    image: docker.io/bitnami/kafka:3.4
+  zookeeper:
+    container_name: sf-messenger-kafka-zookeeper
+    build:
+      context: .docker/zookeeper
     ports:
-      - "9092:9092"
-    volumes:
-      - "kafka_data:/bitnami"
-    environment:
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      - '2181:2181'
+
+  # todo: replication
+  kafka:
+    container_name: sf-messenger-kafka-server
+    build:
+      context: .docker/kafka
+    command:
+      - --override
+      - broker.id=1
+      - --override
+      - zookeeper.connect=zookeeper:2181
+    depends_on:
+      - zookeeper
 
 volumes:
-  kafka_data:
+  redis_data:
     driver: local
