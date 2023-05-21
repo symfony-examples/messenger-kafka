@@ -3,13 +3,12 @@
 namespace App\Kafka\Transport;
 
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
 use Symfony\Component\Messenger\Exception\TransportException;
-use Symfony\Component\Messenger\Transport\Receiver\QueueReceiverInterface;
+use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
-class KafkaReceiver implements QueueReceiverInterface
+class KafkaReceiver implements ReceiverInterface
 {
     private SerializerInterface $serializer;
     private Connection $connection;
@@ -20,29 +19,22 @@ class KafkaReceiver implements QueueReceiverInterface
         $this->serializer = $serializer ?? new PhpSerializer();
     }
 
-    public function getFromQueues(array $queueNames): iterable
-    {
-        foreach ($queueNames as $queueName) {
-            yield from $this->getEnvelope($queueName);
-        }
-    }
-
     public function get(): iterable
     {
-        yield from $this->getFromQueues($this->connection->getTopics());
+        yield from $this->getEnvelope();
     }
 
     public function ack(Envelope $envelope): void
     {
-        // TODO: Implement ack() method.
+        // no ack method for kafka transport
     }
 
     public function reject(Envelope $envelope): void
     {
-        // TODO: Implement reject() method.
+        // no reject method for kafka transport
     }
 
-    private function getEnvelope(string $topic): iterable
+    private function getEnvelope(): iterable
     {
         try {
             $kafkaMessage = $this->connection->get();
@@ -54,26 +46,14 @@ class KafkaReceiver implements QueueReceiverInterface
             return;
         }
 
-        if (0 !== $kafkaMessage->err) {
-            // todo: manage exceptions
+        if (RD_KAFKA_RESP_ERR_NO_ERROR !== $kafkaMessage->err) {
+            // todo: manage exception
             return;
         }
 
-        $body = $kafkaMessage->payload;
-
-        try {
-            // todo: multiple serializer (string, json, v2+json) https://kafka.apache.org/23/javadoc/org/apache/kafka/common/serialization/package-frame.html
-            $envelope = $this->serializer->decode([
-                'body' => $body,
-                'headers' => $kafkaMessage->headers,
-            ]);
-        } catch (MessageDecodingFailedException $exception) {
-            // invalid message of some type
-            //$this->rejectAmqpEnvelope($amqpEnvelope, $queueName);
-
-            throw $exception;
-        }
-
-        yield $envelope->with(new KafkaReceivedStamp($kafkaMessage, $topic));
+        yield $this->serializer->decode([
+            'body' => $kafkaMessage->payload,
+            'headers' => $kafkaMessage->headers,
+        ]);
     }
 }

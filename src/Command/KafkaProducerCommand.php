@@ -40,7 +40,7 @@ class KafkaProducerCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->bus->dispatch(
-            new OrderPaidMessage(reference: 'RTY', amount: 3000)
+            new OrderPaidMessage(reference: '3testRTY', amount: 3000)
         );
         $output->writeln(
             sprintf(

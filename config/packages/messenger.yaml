@@ -1,34 +1,30 @@
 framework:
     messenger:
-        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
-        # failure_transport: failed
-
         transports:
-            # https://symfony.com/doc/current/messenger.html#transport-configuration
-            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
-            # failed: 'doctrine://default?queue_name=failed'
-            # sync: 'sync://'
-            kafka_test:
+            kafka_transport:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 options:
-                    topic: 'topic' # ProducerTopic
-                    # todo: create topics if not exists
-                    # todo: manage single topic
-                    topics: # ConsumerTopics
-                        - 'topic'
-                        - 'test'
+                    metadata.broker.list: '%env(KAFKA_BROKERS)%'
+                    security.protocol: 'plaintext' # plaintext, ssl, sasl_plaintext, sasl_ssl
+                    group.id: 'my-group-id' # consumer group id
+                    auto.offset.reset: 'earliest' # 'earliest': start from the beginning
+                    enable.partition.eof: true # Emit EOF event when reaching the end of a partition
+                    #allow.auto.create.topics: true # Allow automatic topic creation on the broker
+                    #ssl.certificate.location: ''
+                    message.send.max.retries: 5
+                    producer_topic: 'producer_topic'
+                    consumer_topics:
+                        - 'producer_topic'
 
         routing:
-            # Route your messages to the transports
-            'App\Messenger\Message\OrderPaidMessage': kafka_test
+            'App\Messenger\Message\OrderPaidMessage': kafka_transport
 
         serializer:
             default_serializer: messenger.transport.symfony_serializer
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
-#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            transports:
+                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
+                kafka_transport: 'in-memory://'

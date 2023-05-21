@@ -3,15 +3,11 @@
 namespace App\Kafka\Transport;
 
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\TransportException;
-use Symfony\Component\Messenger\Transport\Receiver\MessageCountAwareInterface;
-use Symfony\Component\Messenger\Transport\Receiver\QueueReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
-use Symfony\Component\Messenger\Transport\SetupableTransportInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
-class KafkaTransport implements TransportInterface, SetupableTransportInterface
+class KafkaTransport implements TransportInterface
 {
     private SerializerInterface $serializer;
     private Connection $connection;
@@ -31,22 +27,17 @@ class KafkaTransport implements TransportInterface, SetupableTransportInterface
 
     public function ack(Envelope $envelope): void
     {
-        // TODO: Implement ack() method.
+        $this->getReceiver()->ack($envelope);
     }
 
     public function reject(Envelope $envelope): void
     {
-        // TODO: Implement reject() method.
+        $this->getReceiver()->reject($envelope);
     }
 
     public function send(Envelope $envelope): Envelope
     {
         return $this->getSender()->send($envelope);
-    }
-
-    public function setup(): void
-    {
-        $this->connection->setup();
     }
 
     private function getReceiver(): KafkaReceiver
