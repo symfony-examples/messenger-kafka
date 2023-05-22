@@ -19,6 +19,7 @@ class KafkaReceiver implements ReceiverInterface
         $this->serializer = $serializer ?? new PhpSerializer();
     }
 
+    /** @psalm-return array<Envelope> */
     public function get(): iterable
     {
         yield from $this->getEnvelope();
@@ -34,6 +35,7 @@ class KafkaReceiver implements ReceiverInterface
         // no reject method for kafka transport
     }
 
+    /** @psalm-return array<Envelope> */
     private function getEnvelope(): iterable
     {
         try {

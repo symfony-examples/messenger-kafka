@@ -48,8 +48,10 @@ class KafkaProducerCommand extends Command
         try {
             $this->bus->dispatch(
                 new OrderPaidMessage(
-                    reference: $input->getArgument(self::REF_ARGS),
-                    amount: $input->getArgument(self::AMOUNT_ARGS)
+                    reference: is_string($input->getArgument(self::REF_ARGS)) ?
+                        $input->getArgument(self::REF_ARGS) : null,
+                    amount: is_float($input->getArgument(self::AMOUNT_ARGS)) ?
+                        $input->getArgument(self::AMOUNT_ARGS) : null
                 )
             );
         } catch (Throwable $e) {
