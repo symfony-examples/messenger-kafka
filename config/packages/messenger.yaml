@@ -1,23 +1,47 @@
 framework:
     messenger:
         transports:
-            kafka_transport:
+            order_transport:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 options:
+                    # librdkafka configuration options are available here
+                    # https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md
                     metadata.broker.list: '%env(KAFKA_BROKERS)%'
                     security.protocol: 'plaintext' # plaintext, ssl, sasl_plaintext, sasl_ssl
                     group.id: 'my-group-id' # consumer group id
                     auto.offset.reset: 'earliest' # 'earliest': start from the beginning
-                    enable.partition.eof: true # Emit EOF event when reaching the end of a partition
+                    enable.partition.eof: 'true' # Emit EOF event when reaching the end of a partition
                     #allow.auto.create.topics: true # Allow automatic topic creation on the broker
                     #ssl.certificate.location: ''
-                    message.send.max.retries: 5
-                    producer_topic: 'producer_topic'
+                    message.send.max.retries: 5 # How many times to retry sending a failing Message
+
+                    # (not required, default false) if true then RD_KAFKA_MSG_F_BLOCK will apply
+                    # @see https://github.com/arnaud-lb/php-rdkafka/blob/6.x/README.md#producing-messages
+                    producer_message_flags_block: false
+
+                    # (not required, default -1 unassigned) the partition id
+                    # @see https://github.com/arnaud-lb/php-rdkafka/blob/6.x/README.md#producing-messages
+                    #producer_partition_id_assignment: 0
+                    #producer_poll_timeout_ms: 10 # (not required, default 0)
+                    #producer_flush_timeout_ms: 20000 # (not required, default 10000)
+                    producer_topic: 'order_topic_test'
+
+                    #consumer_consume_timeout_ms: 30000 # (not required, default 10000)
                     consumer_topics:
-                        - 'producer_topic'
+                        - 'order_topic_test'
+
+            invoice_transport:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    metadata.broker.list: '%env(KAFKA_BROKERS)%'
+                    security.protocol: 'plaintext'
+                    allow.auto.create.topics: true
+                    message.send.max.retries: 5
+                    producer_topic: 'invoice_topic_test'
 
         routing:
-            'App\Messenger\Message\OrderPaidMessage': kafka_transport
+            'App\Messenger\Message\OrderPaidMessage': order_transport
+            'App\Messenger\Message\InvoiceCreatedMessage': invoice_transport
 
         serializer:
             default_serializer: messenger.transport.symfony_serializer
@@ -27,4 +51,5 @@ when@test:
         messenger:
             transports:
                 # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-                kafka_transport: 'in-memory://'
+                order_transport: 'in-memory://'
+                invoice_transport: 'in-memory://'

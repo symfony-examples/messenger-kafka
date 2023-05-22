@@ -47,8 +47,13 @@ class KafkaReceiver implements ReceiverInterface
         }
 
         if (RD_KAFKA_RESP_ERR_NO_ERROR !== $kafkaMessage->err) {
-            // todo: manage exception
-            return;
+            switch ($kafkaMessage->err) {
+                case RD_KAFKA_RESP_ERR__PARTITION_EOF: // No more messages
+                case RD_KAFKA_RESP_ERR__TIMED_OUT: // Attempt to connect again
+                    return;
+                default:
+                    throw new TransportException($kafkaMessage->errstr(), $kafkaMessage->err);
+            }
         }
 
         yield $this->serializer->decode([

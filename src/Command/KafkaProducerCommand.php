@@ -9,17 +9,17 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 #[AsCommand(
-    name: 'app:kafka:producer',
-    description: 'Send record to kafka topic.'
+    name: 'app:messenger:producer',
+    description: 'Send record to messenger transport.'
 )]
 class KafkaProducerCommand extends Command
 {
-    public const TOPIC_ARGS = 'topic';
+    public const REF_ARGS = 'reference';
+    public const AMOUNT_ARGS = 'amount';
 
-    public function __construct(private SerializerInterface $serializer, private MessageBusInterface $bus, string $name = null)
+    public function __construct(private readonly MessageBusInterface $bus, string $name = null)
     {
         parent::__construct($name);
     }
@@ -28,64 +28,39 @@ class KafkaProducerCommand extends Command
     {
         $this
             // the command help shown when running the command with the "--help" option
-            ->setHelp('This command allows you to send message to kafka topic.')
+            ->setHelp('This command allows you to send message to messenger transport.')
             ->addArgument(
-                name: self::TOPIC_ARGS,
+                name: self::REF_ARGS,
                 mode: InputArgument::REQUIRED,
-                description: 'The topic name.'
+                description: 'The order reference.'
+            )
+            ->addArgument(
+                name: self::AMOUNT_ARGS,
+                mode: InputArgument::REQUIRED,
+                description: 'The order amount.'
             )
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->bus->dispatch(
-            new OrderPaidMessage(reference: '3testRTY', amount: 3000)
-        );
-        $output->writeln(
-            sprintf(
-                '<info>Message send it to Kafka topic "%s" with messenger dispatcher</info>', $input->getArgument(self::TOPIC_ARGS)
-            )
-        );
-
-        return Command::SUCCESS;
-
-
-        $conf = new \RdKafka\Conf();
-        $conf->set('metadata.broker.list', 'kafka:9092');
-
-        $producer = new \RdKafka\Producer($conf);
-
-        $topic = $producer->newTopic($input->getArgument(self::TOPIC_ARGS));
-
-        $message = new OrderPaidMessage(reference: 'QWE', amount: 2100);
-        $topic->producev(
-            partition: RD_KAFKA_PARTITION_UA,
-            msgflags: 0,
-            payload: $this->serializer->serialize($message, 'json'),
-            headers: ['type' => get_class($message)]
-        );
-        $producer->poll(0);
-
-        for ($flushRetries = 0; $flushRetries < 5; $flushRetries++) {
-            $result = $producer->flush(10000);
-
-            if (RD_KAFKA_RESP_ERR_NO_ERROR === $result) {
-                break;
-            }
-        }
-
-        if (RD_KAFKA_RESP_ERR_NO_ERROR !== $result) {
-            $output->writeln('<error>Was unable to flush, messages might be lost!</error>');
+        try {
+            $this->bus->dispatch(
+                new OrderPaidMessage(
+                    reference: $input->getArgument(self::REF_ARGS),
+                    amount: $input->getArgument(self::AMOUNT_ARGS)
+                )
+            );
+        } catch (\Throwable $e) {
+            $output->writeln(sprintf(
+                '<error>Failed to send OrderPaidMessage to messenger transport with error message : %s</error>',
+                $e->getMessage()
+            ));
 
             return Command::FAILURE;
         }
 
-        $output->writeln(
-            sprintf(
-                '<info>Message send it to Kafka topic "%s"</info>', $input->getArgument(self::TOPIC_ARGS)
-            )
-        );
+        $output->writeln('<info>Message OrderPaidMessage send it to messenger transport</info>');
 
         return Command::SUCCESS;
     }

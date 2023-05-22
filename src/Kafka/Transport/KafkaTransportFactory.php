@@ -10,8 +10,6 @@ class KafkaTransportFactory implements TransportFactoryInterface
 {
     public function createTransport(string $dsn, array $options, SerializerInterface $serializer): TransportInterface
     {
-        unset($options['transport_name']);
-
         return new KafkaTransport(Connection::builder($options), $serializer);
     }
 
