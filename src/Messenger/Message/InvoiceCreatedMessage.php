@@ -8,8 +8,7 @@ class InvoiceCreatedMessage
         public ?string $reference = null,
         public ?float $amount = null,
         public ?string $status = null
-    )
-    {
+    ) {
     }
 
     public function getReference(): ?string

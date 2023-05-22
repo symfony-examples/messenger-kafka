@@ -33,9 +33,21 @@ class Connection
         private readonly KafkaFactory $kafkaFactory = new KafkaFactory()
     ) {
         if (!\extension_loaded('rdkafka')) {
-            throw new LogicException(sprintf(
-                'You cannot use the "%s" as the "rdkafka" extension is not installed.', __CLASS__
-            ));
+            throw new LogicException(sprintf('You cannot use the "%s" as the "rdkafka" extension is not installed.', __CLASS__));
+        }
+    }
+
+    public function setup(): void
+    {
+        if (!array_key_exists(self::BROKERS_LIST, $this->kafkaConfig)) {
+            throw new LogicException(sprintf('The "%s" option is required for the Kafka Messenger transport "%s".', self::BROKERS_LIST, $this->kafkaConfig[self::TRANSPORT_NAME]));
+        }
+
+        if (
+            !array_key_exists(self::CONSUMER_TOPICS_NAME, $this->kafkaConfig) &&
+            !array_key_exists(self::PRODUCER_TOPIC_NAME, $this->kafkaConfig)
+        ) {
+            throw new LogicException(sprintf('At least one of "%s" or "%s" options is required for the Kafka Messenger transport "%s".', self::CONSUMER_TOPICS_NAME, self::PRODUCER_TOPIC_NAME, $this->kafkaConfig[self::TRANSPORT_NAME]));
         }
     }
 
@@ -49,11 +61,7 @@ class Connection
     public function get(): \RdKafka\Message
     {
         if (!array_key_exists(self::GROUP_ID, $this->kafkaConfig)) {
-            throw new LogicException(sprintf(
-                'The transport "%s" is not configured to consume messages because "%s" option is missing.',
-                $this->kafkaConfig[self::TRANSPORT_NAME],
-                self::GROUP_ID
-            ));
+            throw new LogicException(sprintf('The transport "%s" is not configured to consume messages because "%s" option is missing.', $this->kafkaConfig[self::TRANSPORT_NAME], self::GROUP_ID));
         }
 
         $consumer = $this->kafkaFactory->createConsumer($this->kafkaConfig);
@@ -83,78 +91,37 @@ class Connection
         $producer->flush($this->getProducerFlushTimeout());
     }
 
-    public function setup(): void
-    {
-        if (!array_key_exists(self::BROKERS_LIST, $this->kafkaConfig)) {
-            throw new LogicException(sprintf(
-                'The "%s" option is required for the Kafka Messenger transport "%s".',
-                self::BROKERS_LIST,
-                $this->kafkaConfig[self::TRANSPORT_NAME]
-            ));
-        }
-
-        if (
-            !array_key_exists(self::CONSUMER_TOPICS_NAME, $this->kafkaConfig) &&
-            !array_key_exists(self::PRODUCER_TOPIC_NAME, $this->kafkaConfig)
-        ) {
-            throw new LogicException(sprintf(
-                'At least one of "%s" or "%s" options is required for the Kafka Messenger transport "%s".',
-                self::CONSUMER_TOPICS_NAME,
-                self::PRODUCER_TOPIC_NAME,
-                $this->kafkaConfig[self::TRANSPORT_NAME]
-            ));
-        }
-    }
-
     private static function optionsValidator(array $options): void
     {
         if (0 < \count($invalidOptions = array_diff(
-                array_keys($options),
-                array_merge(
-                    self::GLOBAL_OPTIONS,
-                    array_keys(
-                        array_merge(self::GLOBAL_OPTIONS, KafkaOption::consumer(), KafkaOption::producer())
-                    )
+            array_keys($options),
+            array_merge(
+                self::GLOBAL_OPTIONS,
+                array_keys(
+                    array_merge(self::GLOBAL_OPTIONS, KafkaOption::consumer(), KafkaOption::producer())
                 )
-            ))
+            )
+        ))
         ) {
-            throw new LogicException(sprintf(
-                'Invalid option(s) "%s" passed to the Kafka Messenger transport "%s".',
-                implode('", "', $invalidOptions),
-                $options[self::TRANSPORT_NAME]
-            ));
+            throw new LogicException(sprintf('Invalid option(s) "%s" passed to the Kafka Messenger transport "%s".', implode('", "', $invalidOptions), $options[self::TRANSPORT_NAME]));
         }
     }
 
     private static function intOptionValidator(array $options, string $optionKey): void
     {
         if (array_key_exists($optionKey, $options) && !is_int($options[$optionKey])) {
-            throw new LogicException(sprintf(
-                'The "%s" option type must be integer, %s given in "%s" transport.',
-                $optionKey,
-                gettype($options[$optionKey]),
-                $options[self::TRANSPORT_NAME],
-            ));
+            throw new LogicException(sprintf('The "%s" option type must be integer, %s given in "%s" transport.', $optionKey, gettype($options[$optionKey]), $options[self::TRANSPORT_NAME]));
         }
     }
 
     private function getTopics(): array
     {
         if (!array_key_exists(self::CONSUMER_TOPICS_NAME, $this->kafkaConfig)) {
-            throw new LogicException(sprintf(
-                'The transport "%s" is not configured to consume messages because "%s" option is missing.',
-                $this->kafkaConfig[self::TRANSPORT_NAME],
-                self::CONSUMER_TOPICS_NAME
-            ));
+            throw new LogicException(sprintf('The transport "%s" is not configured to consume messages because "%s" option is missing.', $this->kafkaConfig[self::TRANSPORT_NAME], self::CONSUMER_TOPICS_NAME));
         }
 
         if (!is_array($this->kafkaConfig[self::CONSUMER_TOPICS_NAME])) {
-            throw new LogicException(sprintf(
-                'The "%s" option type must be array, %s given in "%s" transport.',
-                self::CONSUMER_TOPICS_NAME,
-                gettype($this->kafkaConfig[self::CONSUMER_TOPICS_NAME]),
-                $this->kafkaConfig[self::TRANSPORT_NAME],
-            ));
+            throw new LogicException(sprintf('The "%s" option type must be array, %s given in "%s" transport.', self::CONSUMER_TOPICS_NAME, gettype($this->kafkaConfig[self::CONSUMER_TOPICS_NAME]), $this->kafkaConfig[self::TRANSPORT_NAME]));
         }
 
         return $this->kafkaConfig[self::CONSUMER_TOPICS_NAME];
@@ -174,11 +141,7 @@ class Connection
     private function getTopic(): string
     {
         if (!array_key_exists(self::PRODUCER_TOPIC_NAME, $this->kafkaConfig)) {
-            throw new LogicException(sprintf(
-                'The transport "%s" is not configured to dispatch messages because "%s" option is missing.',
-                $this->kafkaConfig[self::TRANSPORT_NAME],
-                self::PRODUCER_TOPIC_NAME
-            ));
+            throw new LogicException(sprintf('The transport "%s" is not configured to dispatch messages because "%s" option is missing.', $this->kafkaConfig[self::TRANSPORT_NAME], self::PRODUCER_TOPIC_NAME));
         }
 
         return $this->kafkaConfig[self::PRODUCER_TOPIC_NAME];
@@ -191,12 +154,7 @@ class Connection
         }
 
         if (!is_bool($this->kafkaConfig[self::PRODUCER_MESSAGE_FLAGS_BLOCK])) {
-            throw new LogicException(sprintf(
-                'The "%s" option type must be boolean, %s given in "%s" transport.',
-                self::PRODUCER_MESSAGE_FLAGS_BLOCK,
-                gettype($this->kafkaConfig[self::PRODUCER_MESSAGE_FLAGS_BLOCK]),
-                $this->kafkaConfig[self::TRANSPORT_NAME],
-            ));
+            throw new LogicException(sprintf('The "%s" option type must be boolean, %s given in "%s" transport.', self::PRODUCER_MESSAGE_FLAGS_BLOCK, gettype($this->kafkaConfig[self::PRODUCER_MESSAGE_FLAGS_BLOCK]), $this->kafkaConfig[self::TRANSPORT_NAME]));
         }
 
         return false === $this->kafkaConfig[self::PRODUCER_MESSAGE_FLAGS_BLOCK] ? 0 : RD_KAFKA_MSG_F_BLOCK;

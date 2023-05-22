@@ -7,8 +7,7 @@ class OrderPaidMessage
     public function __construct(
         public ?string $reference = null,
         public ?float $amount = null
-    )
-    {
+    ) {
     }
 
     public function getReference(): ?string

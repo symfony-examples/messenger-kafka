@@ -4,6 +4,7 @@ namespace App\Messenger\Handler;
 
 use App\Messenger\Message\InvoiceCreatedMessage;
 use App\Messenger\Message\OrderPaidMessage;
+use DateTime;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -20,7 +21,7 @@ class OrderPaidHandler
         // in this example we dispatch the invoice for the order paid
         $this->bus->dispatch(
             new InvoiceCreatedMessage(
-                reference: sprintf('i%d%s', (new \DateTime('now'))->getTimestamp(), $message->getReference()),
+                reference: sprintf('i%d%s', (new DateTime('now'))->getTimestamp(), $message->getReference()),
                 amount: $message->getAmount(),
                 status: 'paid'
             )
