@@ -25,11 +25,13 @@ class KafkaReceiver implements ReceiverInterface
         yield from $this->getEnvelope();
     }
 
+    /** @SuppressWarnings(PHPMD.UnusedFormalParameter) */
     public function ack(Envelope $envelope): void
     {
         // no ack method for kafka transport
     }
 
+    /** @SuppressWarnings(PHPMD.UnusedFormalParameter) */
     public function reject(Envelope $envelope): void
     {
         // no reject method for kafka transport

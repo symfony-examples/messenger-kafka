@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Kafka\Transport;
 use App\Kafka\Transport\Connection;
 use App\Kafka\Transport\KafkaFactory;
 use App\Tests\Unit\Fixtures\FakeMessage;
+use App\Tests\Unit\Fixtures\TestKafkaFactory;
 use PHPUnit\Framework\TestCase;
 use RdKafka\Exception;
 use RdKafka\KafkaConsumer;
@@ -15,6 +16,9 @@ use Symfony\Component\Messenger\Exception\LogicException;
 use Symfony\Component\Messenger\Exception\RuntimeException;
 use Symfony\Component\Messenger\Exception\TransportException;
 
+/**
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ */
 class ConnectionTest extends TestCase
 {
     private KafkaConsumer $consumer;
@@ -479,22 +483,5 @@ class ConnectionTest extends TestCase
         self::expectExceptionCode(0);
 
         $connection->setup();
-    }
-}
-
-class TestKafkaFactory extends KafkaFactory
-{
-    public function __construct(public KafkaConsumer $consumer, public Producer $producer)
-    {
-    }
-
-    public function createConsumer(array $kafkaConfig): KafkaConsumer
-    {
-        return $this->consumer;
-    }
-
-    public function createProducer(array $kafkaConfig): Producer
-    {
-        return $this->producer;
     }
 }

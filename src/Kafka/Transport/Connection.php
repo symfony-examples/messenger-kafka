@@ -118,7 +118,7 @@ class Connection
     /** @psalm-param array<string, bool|float|int|string|array<string>> $options */
     private static function optionsValidator(array $options, string $transportName): void
     {
-        if (0 < \count($invalidOptions = array_diff(
+        $invalidOptions = array_diff(
             array_keys($options),
             array_merge(
                 self::GLOBAL_OPTIONS,
@@ -126,8 +126,9 @@ class Connection
                     array_merge(self::GLOBAL_OPTIONS, KafkaOption::consumer(), KafkaOption::producer())
                 )
             )
-        ))
-        ) {
+        );
+
+        if (0 < \count($invalidOptions)) {
             throw new LogicException(sprintf(
                 'Invalid option(s) "%s" passed to the Kafka Messenger transport "%s".',
                 implode('", "', $invalidOptions),

@@ -6,6 +6,7 @@ use App\Kafka\Transport\Connection;
 use App\Kafka\Transport\KafkaSender;
 use App\Tests\Unit\Fixtures\FakeMessage;
 use PHPUnit\Framework\TestCase;
+use RdKafka\Exception;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Serialization\Serializer;
@@ -54,7 +55,7 @@ class KafkaSenderTest extends TestCase
                 '{"message":"Hello"}',
                 ['type' => FakeMessage::class, 'Content-Type' => 'application/json']
             )
-            ->willThrowException(new \RdKafka\Exception('Connection exception', 1));
+            ->willThrowException(new Exception('Connection exception', 1));
 
         self::expectException(TransportException::class);
         self::expectExceptionMessage('Connection exception');

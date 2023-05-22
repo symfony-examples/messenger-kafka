@@ -2,12 +2,16 @@
 
 namespace App\Kafka\Transport;
 
+use RdKafka\Conf;
+use RdKafka\KafkaConsumer;
+use RdKafka\Producer;
+
 class KafkaFactory
 {
     /** @psalm-param array<string, bool|float|int|string|array<string>> $kafkaConfig */
-    public function createConsumer(array $kafkaConfig): \RdKafka\KafkaConsumer
+    public function createConsumer(array $kafkaConfig): KafkaConsumer
     {
-        $conf = new \RdKafka\Conf();
+        $conf = new Conf();
 
         foreach ($kafkaConfig as $key => $value) {
             if (array_key_exists($key, array_merge(KafkaOption::global(), KafkaOption::consumer()))) {
@@ -19,13 +23,13 @@ class KafkaFactory
             }
         }
 
-        return new \RdKafka\KafkaConsumer($conf);
+        return new KafkaConsumer($conf);
     }
 
     /** @psalm-param array<string, bool|float|int|string|array<string>> $kafkaConfig */
-    public function createProducer(array $kafkaConfig): \RdKafka\Producer
+    public function createProducer(array $kafkaConfig): Producer
     {
-        $conf = new \RdKafka\Conf();
+        $conf = new Conf();
 
         foreach ($kafkaConfig as $key => $value) {
             if (array_key_exists($key, array_merge(KafkaOption::global(), KafkaOption::producer()))) {
@@ -37,6 +41,6 @@ class KafkaFactory
             }
         }
 
-        return new \RdKafka\Producer($conf);
+        return new Producer($conf);
     }
 }

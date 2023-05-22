@@ -2,7 +2,11 @@
 
 namespace App\Kafka\Transport;
 
-/** @see https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md */
+/**
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ *
+ * @see https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md
+ */
 final class KafkaOption
 {
     /** @psalm-return array<string, string> */
