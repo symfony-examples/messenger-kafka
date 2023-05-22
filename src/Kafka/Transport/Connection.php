@@ -46,7 +46,7 @@ class Connection
         return new self($options, $kafkaFactory ?? new KafkaFactory());
     }
 
-    public function get(): ?\RdKafka\Message
+    public function get(): \RdKafka\Message
     {
         if (!array_key_exists(self::GROUP_ID, $this->kafkaConfig)) {
             throw new LogicException(sprintf(

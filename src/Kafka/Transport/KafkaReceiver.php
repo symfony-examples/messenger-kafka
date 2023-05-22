@@ -42,10 +42,6 @@ class KafkaReceiver implements ReceiverInterface
             throw new TransportException($exception->getMessage(), 0, $exception);
         }
 
-        if (null === $kafkaMessage) {
-            return;
-        }
-
         if (RD_KAFKA_RESP_ERR_NO_ERROR !== $kafkaMessage->err) {
             switch ($kafkaMessage->err) {
                 case RD_KAFKA_RESP_ERR__PARTITION_EOF: // No more messages
