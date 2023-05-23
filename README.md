@@ -129,3 +129,5 @@ Enjoy ! 🥳
 ## References
 https://github.com/arnaud-lb/php-rdkafka <br>
 https://arnaud.le-blanc.net/php-rdkafka-doc/phpdoc/rdkafka.setup.html
+https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md
+
