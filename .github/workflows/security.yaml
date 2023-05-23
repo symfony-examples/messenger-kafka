@@ -1,0 +1,18 @@
+name: SF Messenger Kafka Security
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v3'
+        name: Checkout
+        with:
+          persist-credentials: false
+
+      - name: Symfony security checker
+        uses: symfonycorp/security-checker-action@v4
