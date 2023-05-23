@@ -5,21 +5,31 @@ namespace App\Tests\Unit\Kafka\Transport;
 use App\Kafka\Transport\Connection;
 use App\Kafka\Transport\KafkaFactory;
 use App\Tests\Unit\Fixtures\FakeMessage;
+use App\Tests\Unit\Fixtures\TestKafkaFactory;
 use PHPUnit\Framework\TestCase;
+use RdKafka\Exception;
+use RdKafka\KafkaConsumer;
+use RdKafka\Message;
+use RdKafka\Producer;
+use RdKafka\ProducerTopic;
 use Symfony\Component\Messenger\Exception\LogicException;
+use Symfony\Component\Messenger\Exception\RuntimeException;
 use Symfony\Component\Messenger\Exception\TransportException;
 
+/**
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ */
 class ConnectionTest extends TestCase
 {
-    private \RdKafka\KafkaConsumer $consumer;
-    private \RdKafka\Producer $producer;
+    private KafkaConsumer $consumer;
+    private Producer $producer;
     private KafkaFactory $factory;
 
     protected function setUp(): void
     {
         $this->factory = new TestKafkaFactory(
-            $this->consumer = $this->createMock(\RdKafka\KafkaConsumer::class),
-            $this->producer = $this->createMock(\RdKafka\Producer::class)
+            $this->consumer = $this->createMock(KafkaConsumer::class),
+            $this->producer = $this->createMock(Producer::class)
         );
     }
 
@@ -29,6 +39,7 @@ class ConnectionTest extends TestCase
             Connection::class,
             Connection::builder(
                 [
+                    'transport_name' => 'php-unit-transport',
                     'metadata.broker.list' => 'localhost:9092',
                     'group.id' => 'groupId',
                     'producer_topic' => 'groupId',
@@ -58,6 +69,35 @@ class ConnectionTest extends TestCase
         );
     }
 
+    public function testBuilderWithTransportNameMissing()
+    {
+        self::expectException(RuntimeException::class);
+        self::expectExceptionMessage('Transport name must be exist end type of string.');
+        self::expectExceptionCode(0);
+        Connection::builder(
+            [
+                'metadata_broker_list' => 'localhost:9092',
+                'group_id' => 'groupId',
+                'consumer_topics' => 'consumer_topics',
+            ]
+        );
+    }
+
+    public function testBuilderWithTransportNameException()
+    {
+        self::expectException(RuntimeException::class);
+        self::expectExceptionMessage('Transport name must be exist end type of string.');
+        self::expectExceptionCode(0);
+        Connection::builder(
+            [
+                'transport_name' => ['php-unit-transport'],
+                'metadata_broker_list' => 'localhost:9092',
+                'group_id' => 'groupId',
+                'consumer_topics' => 'consumer_topics',
+            ]
+        );
+    }
+
     public function testPublish()
     {
         $connection = Connection::builder(
@@ -71,7 +111,7 @@ class ConnectionTest extends TestCase
         $this->producer->expects($this->once())
             ->method('newTopic')
             ->with('php-unit-producer-topic')
-            ->willReturn($topic = $this->createMock(\RdKafka\ProducerTopic::class))
+            ->willReturn($topic = $this->createMock(ProducerTopic::class))
         ;
 
         $topic->expects($this->once())
@@ -103,6 +143,26 @@ class ConnectionTest extends TestCase
         $connection->publish('body', ['type' => FakeMessage::class]);
     }
 
+    public function testPublishWithTopicException()
+    {
+        $connection = Connection::builder(
+            [
+                'transport_name' => 'php-unit-transport',
+                'producer_topic' => ['php-unit-producer-topic'],
+            ],
+            $this->factory
+        );
+
+        $this->producer->expects($this->never())->method('newTopic');
+        $this->producer->expects($this->never())->method('poll');
+        $this->producer->expects($this->never())->method('flush');
+
+        self::expectException(LogicException::class);
+        self::expectExceptionMessage('The "producer_topic" option type must be string, array given in "php-unit-transport" transport.');
+        self::expectExceptionCode(0);
+        $connection->publish('body', ['type' => FakeMessage::class]);
+    }
+
     public function testPublishWithPartitionAssignmentException()
     {
         $connection = Connection::builder(
@@ -117,7 +177,7 @@ class ConnectionTest extends TestCase
         $this->producer->expects($this->once())
             ->method('newTopic')
             ->with('php-unit-producer-topic')
-            ->willReturn($topic = $this->createMock(\RdKafka\ProducerTopic::class))
+            ->willReturn($topic = $this->createMock(ProducerTopic::class))
         ;
 
         $topic->expects($this->never())->method('producev');
@@ -145,7 +205,7 @@ class ConnectionTest extends TestCase
         $this->producer->expects($this->once())
             ->method('newTopic')
             ->with('php-unit-producer-topic')
-            ->willReturn($topic = $this->createMock(\RdKafka\ProducerTopic::class))
+            ->willReturn($topic = $this->createMock(ProducerTopic::class))
         ;
 
         $topic->expects($this->never())->method('producev');
@@ -174,7 +234,7 @@ class ConnectionTest extends TestCase
         $this->producer->expects($this->once())
             ->method('newTopic')
             ->with('php-unit-producer-topic')
-            ->willReturn($topic = $this->createMock(\RdKafka\ProducerTopic::class))
+            ->willReturn($topic = $this->createMock(ProducerTopic::class))
         ;
         $topic->expects($this->once())
             ->method('producev')
@@ -206,7 +266,7 @@ class ConnectionTest extends TestCase
         $this->producer->expects($this->once())
             ->method('newTopic')
             ->with('php-unit-producer-topic')
-            ->willReturn($topic = $this->createMock(\RdKafka\ProducerTopic::class))
+            ->willReturn($topic = $this->createMock(ProducerTopic::class))
         ;
         $topic->expects($this->once())
             ->method('producev')
@@ -238,7 +298,7 @@ class ConnectionTest extends TestCase
         $this->producer->expects($this->once())
             ->method('newTopic')
             ->with('php-unit-producer-topic')
-            ->willReturn($topic = $this->createMock(\RdKafka\ProducerTopic::class))
+            ->willReturn($topic = $this->createMock(ProducerTopic::class))
         ;
         $topic->expects($this->once())
             ->method('producev')
@@ -263,7 +323,7 @@ class ConnectionTest extends TestCase
 
         $this->consumer->expects($this->once())->method('subscribe')->with(['php-unit-consumer']);
         $this->consumer->expects($this->once())->method('consume')
-            ->with(10000)->willReturn(new \RdKafka\Message());
+            ->with(10000)->willReturn(new Message());
 
         $connection->get();
     }
@@ -364,7 +424,7 @@ class ConnectionTest extends TestCase
 
         $this->consumer->expects($this->once())->method('subscribe')->with(['php-unit-consumer']);
         $this->consumer->expects($this->once())->method('consume')
-            ->with(20000)->willThrowException(new \RdKafka\Exception('kafka consume error', 1));
+            ->with(20000)->willThrowException(new Exception('kafka consume error', 1));
 
         self::expectException(TransportException::class);
         self::expectExceptionMessage('kafka consume error');
@@ -387,7 +447,7 @@ class ConnectionTest extends TestCase
 
         $this->consumer->expects($this->once())->method('subscribe')->with(['php-unit-consumer']);
         $this->consumer->expects($this->once())->method('consume')
-            ->with(20000)->willReturn(new \RdKafka\Message());
+            ->with(20000)->willReturn(new Message());
 
         $connection->get();
     }
@@ -423,22 +483,5 @@ class ConnectionTest extends TestCase
         self::expectExceptionCode(0);
 
         $connection->setup();
-    }
-}
-
-class TestKafkaFactory extends KafkaFactory
-{
-    public function __construct(public \RdKafka\KafkaConsumer $consumer, public \RdKafka\Producer $producer)
-    {
-    }
-
-    public function createConsumer(array $kafkaConfig): \RdKafka\KafkaConsumer
-    {
-        return $this->consumer;
-    }
-
-    public function createProducer(array $kafkaConfig): \RdKafka\Producer
-    {
-        return $this->producer;
     }
 }

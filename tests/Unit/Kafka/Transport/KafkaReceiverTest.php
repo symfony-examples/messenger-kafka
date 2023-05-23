@@ -6,6 +6,8 @@ use App\Kafka\Transport\Connection;
 use App\Kafka\Transport\KafkaReceiver;
 use App\Tests\Unit\Fixtures\FakeMessage;
 use PHPUnit\Framework\TestCase;
+use RdKafka\Exception;
+use RdKafka\Message;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Serialization\Serializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
@@ -21,7 +23,10 @@ class KafkaReceiverTest extends TestCase
     {
         $this->connection = $this->createMock(Connection::class);
         $this->serializer = new Serializer(
-            new SymfonySerializer\Serializer([new SymfonySerializer\Normalizer\ObjectNormalizer()], ['json' => new SymfonySerializer\Encoder\JsonEncoder()])
+            new SymfonySerializer\Serializer(
+                [new SymfonySerializer\Normalizer\ObjectNormalizer()],
+                ['json' => new SymfonySerializer\Encoder\JsonEncoder()]
+            )
         );
         $this->kafkaReceiver = new KafkaReceiver(
             $this->connection,
@@ -31,7 +36,7 @@ class KafkaReceiverTest extends TestCase
 
     public function testGetDecodedMessage()
     {
-        $kafkaMessage = new \RdKafka\Message();
+        $kafkaMessage = new Message();
         $kafkaMessage->headers = ['type' => FakeMessage::class];
         $kafkaMessage->payload = '{"message": "Hello"}';
         $kafkaMessage->err = 0;
@@ -45,7 +50,7 @@ class KafkaReceiverTest extends TestCase
 
     public function testNoMoreMessages()
     {
-        $kafkaMessage = new \RdKafka\Message();
+        $kafkaMessage = new Message();
         $kafkaMessage->payload = 'No more messages';
         $kafkaMessage->err = RD_KAFKA_RESP_ERR__PARTITION_EOF;
 
@@ -57,7 +62,7 @@ class KafkaReceiverTest extends TestCase
 
     public function testTimeOut()
     {
-        $kafkaMessage = new \RdKafka\Message();
+        $kafkaMessage = new Message();
         $kafkaMessage->payload = 'Timeout';
         $kafkaMessage->err = RD_KAFKA_RESP_ERR__TIMED_OUT;
 
@@ -69,7 +74,7 @@ class KafkaReceiverTest extends TestCase
 
     public function testUnknownTopic()
     {
-        $kafkaMessage = new \RdKafka\Message();
+        $kafkaMessage = new Message();
         $kafkaMessage->payload = 'Unknown topic';
         $kafkaMessage->err = RD_KAFKA_RESP_ERR__UNKNOWN_TOPIC;
 
@@ -84,12 +89,8 @@ class KafkaReceiverTest extends TestCase
 
     public function testExceptionConnection()
     {
-        $kafkaMessage = new \RdKafka\Message();
-        $kafkaMessage->payload = 'Unknown topic';
-        $kafkaMessage->err = RD_KAFKA_RESP_ERR__UNKNOWN_TOPIC;
-
         $this->connection->method('get')->willThrowException(
-            new \RdKafka\Exception('Connection exception', 1)
+            new Exception('Connection exception', 1)
         );
 
         self::expectException(TransportException::class);

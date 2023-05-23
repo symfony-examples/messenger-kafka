@@ -4,9 +4,9 @@ namespace App\Kafka\Transport;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
+use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Transport\SetupableTransportInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
-use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
 class KafkaTransport implements TransportInterface, SetupableTransportInterface
 {
@@ -19,6 +19,11 @@ class KafkaTransport implements TransportInterface, SetupableTransportInterface
     {
         $this->connection = $connection;
         $this->serializer = $serializer ?? new PhpSerializer();
+    }
+
+    public function setup(): void
+    {
+        $this->connection->setup();
     }
 
     public function get(): iterable
@@ -49,10 +54,5 @@ class KafkaTransport implements TransportInterface, SetupableTransportInterface
     private function getSender(): KafkaSender
     {
         return $this->sender ??= new KafkaSender($this->connection, $this->serializer);
-    }
-
-    public function setup(): void
-    {
-        $this->connection->setup();
     }
 }

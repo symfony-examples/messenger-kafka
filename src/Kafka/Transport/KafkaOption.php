@@ -2,9 +2,14 @@
 
 namespace App\Kafka\Transport;
 
-/** @see https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md */
+/**
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ *
+ * @see https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md
+ */
 final class KafkaOption
 {
+    /** @psalm-return array<string, string> */
     public static function consumer(): array
     {
         return array_merge(
@@ -45,6 +50,7 @@ final class KafkaOption
         );
     }
 
+    /** @psalm-return array<string, string> */
     public static function producer(): array
     {
         return array_merge(
@@ -85,6 +91,7 @@ final class KafkaOption
         );
     }
 
+    /** @psalm-return array<string, string> */
     public static function global(): array
     {
         return [

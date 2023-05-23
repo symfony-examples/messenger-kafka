@@ -19,21 +19,25 @@ class KafkaReceiver implements ReceiverInterface
         $this->serializer = $serializer ?? new PhpSerializer();
     }
 
+    /** @psalm-return array<Envelope> */
     public function get(): iterable
     {
         yield from $this->getEnvelope();
     }
 
+    /** @SuppressWarnings(PHPMD.UnusedFormalParameter) */
     public function ack(Envelope $envelope): void
     {
         // no ack method for kafka transport
     }
 
+    /** @SuppressWarnings(PHPMD.UnusedFormalParameter) */
     public function reject(Envelope $envelope): void
     {
         // no reject method for kafka transport
     }
 
+    /** @psalm-return array<Envelope> */
     private function getEnvelope(): iterable
     {
         try {

@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Throwable;
 
 #[AsCommand(
     name: 'app:messenger:producer',
@@ -47,11 +48,13 @@ class KafkaProducerCommand extends Command
         try {
             $this->bus->dispatch(
                 new OrderPaidMessage(
-                    reference: $input->getArgument(self::REF_ARGS),
-                    amount: $input->getArgument(self::AMOUNT_ARGS)
+                    reference: is_string($input->getArgument(self::REF_ARGS)) ?
+                        $input->getArgument(self::REF_ARGS) : null,
+                    amount: is_float($input->getArgument(self::AMOUNT_ARGS)) ?
+                        $input->getArgument(self::AMOUNT_ARGS) : null
                 )
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $output->writeln(sprintf(
                 '<error>Failed to send OrderPaidMessage to messenger transport with error message : %s</error>',
                 $e->getMessage()

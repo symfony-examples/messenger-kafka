@@ -22,7 +22,11 @@ class KafkaTransportFactoryTest extends TestCase
     {
         self::assertInstanceOf(
             KafkaTransport::class,
-            $this->factory->createTransport('kafka://', [], $this->serializer)
+            $this->factory->createTransport(
+                'kafka://',
+                ['transport_name' => 'php-unit-transport'],
+                $this->serializer
+            )
         );
     }
 
