@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Prune CI docker image
-        continue-on-error: true
         uses: 'actions/delete-package-versions@v4'
         with:
           package-name: 'messenger-kafka'

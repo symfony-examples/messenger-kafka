@@ -36,6 +36,8 @@ install-local: ## Install project
 	$(MAKE) composer install
 	@echo "[Kafka] Create order_topic_test topic"
 	$(MAKE) topic-create order_topic_test
+	@echo "[Kafka] Create invoice_topic_test topic"
+	$(MAKE) topic-create invoice_topic_test
 
 ##
 ## Symfony commands
