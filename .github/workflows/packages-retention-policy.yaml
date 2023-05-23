@@ -16,4 +16,4 @@ jobs:
           package-name: 'messenger-kafka'
           package-type: 'container'
           delete-only-untagged-versions: true
-          token: ${{ secrets.GH_REPOSITORY_TOKEN }}
+          token: ${{ secrets.YB_GH_REPOSITORY_TOKEN }}
