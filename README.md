@@ -3,7 +3,9 @@
 [![SF Messenger Kafka Security](https://github.com/symfony-examples/messenger-kafka/actions/workflows/security.yaml/badge.svg?branch=main)](https://github.com/symfony-examples/messenger-kafka/actions/workflows/security.yaml)
 [![SF Messenger Kafka Packages retention policy](https://github.com/symfony-examples/messenger-kafka/actions/workflows/packages-retention-policy.yaml/badge.svg?branch=main)](https://github.com/symfony-examples/messenger-kafka/actions/workflows/packages-retention-policy.yaml)
 ## About
-This is a simple implementation messenger with kafka transport.
+A sample Symfony project implementing messenger with apache kafka service.<br />
+This repository contains a symfony project and the kafka and zookeeper servers.<br />
+Services run on docker.<br />
 In this example we have configured messenger component to :
 * Publish message in a kafka topic
 * Consume messages from a kafka topics
@@ -19,7 +21,7 @@ By default, kafka transport is not implemented by messenger that why we created 
 ## How to
 ### Clone the project
 ```bash
-git clone https://github.com/symfony-examples/doctrine-mongodb.git
+git clone https://github.com/symfony-examples/messenger-kafka.git
 ```
 ### Installation
 This command will create all services and create a kafka topic
@@ -127,7 +129,6 @@ make console messenger:setup-transport
 Enjoy ! 🥳
 
 ## References
-https://github.com/arnaud-lb/php-rdkafka <br>
-https://arnaud.le-blanc.net/php-rdkafka-doc/phpdoc/rdkafka.setup.html
-https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md
-
+* https://github.com/arnaud-lb/php-rdkafka
+* https://arnaud.le-blanc.net/php-rdkafka-doc/phpdoc/rdkafka.setup.html
+* https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md

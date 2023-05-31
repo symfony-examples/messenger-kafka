@@ -1,9 +1,9 @@
 ARG PHP_VERSION=8.2.0
 ARG COMPOSER_VERSION=2.5.5
 
-FROM composer:${COMPOSER_VERSION} as composer
+FROM composer:${COMPOSER_VERSION} AS composer
 
-FROM php:${PHP_VERSION}-fpm-alpine as builder
+FROM php:${PHP_VERSION}-fpm-alpine AS builder
 
 ### SYMFONY REQUIREMENT
 RUN apk add --no-cache icu-dev \
@@ -30,7 +30,7 @@ EXPOSE 9000
 
 WORKDIR /var/www/symfony
 
-FROM builder as local
+FROM builder AS local
 
 ## symfony cli install
 RUN apk add --no-cache bash git
@@ -51,7 +51,7 @@ RUN install-php-extensions xdebug-3.2.1;
 COPY .docker/php/xdebug.ini $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
 ## END XDEBUG
 
-FROM builder as ci
+FROM builder AS ci
 ENV APP_ENV=test
 
 ## INSTALL PHP DETECTORS (PHPCPD & PHPMD)
